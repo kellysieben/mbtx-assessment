@@ -1,0 +1,6 @@
+@MbtxAssessment_HostAddress = http://localhost:5241
+
+GET {{MbtxAssessment_HostAddress}}/happy/
+Accept: application/json
+
+###
