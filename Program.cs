@@ -9,6 +9,9 @@ builder.Services.AddHostedService<TestSensorService>();
 
 var app = builder.Build();
 
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.MapGet("/api/happy", () => ":-)");
 
 app.MapPost("/clients/register", (string clientId, IRegisteredClientStore store) =>
@@ -22,5 +25,7 @@ app.MapPost("/clients/register", (string clientId, IRegisteredClientStore store)
 });
 
 app.MapHub<SensorHub>("/hubs/sensor");
+
+app.MapFallbackToFile("index.html");
 
 app.Run();

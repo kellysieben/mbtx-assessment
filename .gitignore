@@ -70,8 +70,12 @@ local.settings.json
 
 # Node modules and dependency files
 /node_modules/
+**/node_modules/
 /package-lock.json
 /yarn.lock
+
+# Angular build output served as static files
+/wwwroot/
 
 # Environment files
 /.env
