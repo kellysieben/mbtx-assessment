@@ -1,13 +1,16 @@
+using MbtxAssessment.DataStore;
+using MbtxAssessment.SensorReadings;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<IRegisteredClientStore, RegisteredClientStore>();
+builder.Services.AddHostedService<TestSensorService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.MapGet("/api/happy", () => ":-)");
 
-app.UseHttpsRedirection();
-
-app.MapGet("/happy", () => ":-)");
+app.MapHub<SensorHub>("/hubs/sensor");
 
 app.Run();
