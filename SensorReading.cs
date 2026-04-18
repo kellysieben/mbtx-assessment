@@ -1,3 +1,5 @@
+namespace MbtxAssessment;
+
 public record SensorReading
 {
     public Guid Id { get; init; }
