@@ -35,7 +35,7 @@ public class TestSensorService(
             }
 
             logger.LogInformation($"BROADCAST: {message} ==> [ {registeredClients.Count} ] registered client group(s).");
-            await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
         }
     }
 

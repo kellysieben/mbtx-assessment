@@ -39,6 +39,12 @@ app.UseStaticFiles();
 
 app.MapGet("/api/happy", () => ":-)");
 
+app.MapGet("/api/readings/latest", (SensorReadingStore store) =>
+{
+    var latest = store.GetLatest();
+    return latest is null ? Results.NotFound() : Results.Ok(latest);
+});
+
 app.MapPost("/clients/register", (string clientId, IRegisteredClientStore store) =>
 {
     // validate clientId

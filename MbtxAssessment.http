@@ -9,3 +9,8 @@ POST {{MbtxAssessment_HostAddress}}/clients/register?clientId=my-client-2
 Accept: application/json
 
 ###
+
+GET {{MbtxAssessment_HostAddress}}/api/readings/latest
+Accept: application/json
+
+###

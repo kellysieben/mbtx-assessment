@@ -20,4 +20,12 @@ public class SensorReadingStore(IDbContextFactory<AppDbContext> dbContextFactory
         });
         db.SaveChanges();
     }
+
+    public SensorReadingEntity? GetLatest()
+    {
+        using var db = dbContextFactory.CreateDbContext();
+        return db.SensorReadings
+            .OrderByDescending(r => r.Timestamp)
+            .FirstOrDefault();
+    }
 }
