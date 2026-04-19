@@ -1,5 +1,4 @@
 using MbtxAssessment.SensorReadings;
-using Microsoft.AspNetCore.SignalR;
 
 namespace MbtxAssessment;
 
@@ -9,37 +8,18 @@ public static class ApiEndpointExtensions
     {
         app.MapGet("/api/happy", () => ":-)");
 
-        app.MapGet("/api/readings/latest", (SensorReadingStore store) =>
+        app.MapGet("/api/readings/latest", (SensorService service) =>
         {
-            var latest = store.GetLatest();
+            var latest = service.GetLatestReading();
             return latest is null ? Results.NotFound() : Results.Ok(latest);
         });
 
         app.MapPost("/api/readings", async (
             SensorReading[] readings,
-            SensorReadingStore store,
-            IHubContext<SensorHub> hubContext) =>
+            SensorService service) =>
         {
-            if (readings.Length == 0)
-                return Results.BadRequest("Readings array must not be empty.");
-
-            foreach (var reading in readings)
-            {
-                if (reading.Id == Guid.Empty)
-                {
-                    reading.Id = Guid.NewGuid();
-                }
-            }
-
-            store.SaveAll(readings);
-
-            foreach (var reading in readings)
-            {
-                await hubContext.Clients.All.SendAsync("sensorReadingAvailable", reading);
-                app.Logger.LogInformation($"POST .BROADCAST .ALL  .[{reading.Id}] .[{reading.SequenceNumber}]  .[{reading.SensorId}]  .[{reading.Timestamp}]");
-            }
-
-            return Results.Ok();
+            await service.ProcessNewReadings(readings);
+            return Results.Ok();  // Results.BadRequest("Readings array must not be empty.");
         });
 
         app.MapHub<SensorHub>("/hubs/sensor");

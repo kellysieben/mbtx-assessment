@@ -19,6 +19,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<SensorReadingStore>();
+builder.Services.AddSingleton<SensorService>();
 builder.Services.AddHostedService<TestSensorReadingGenerator>();
 
 var app = builder.Build();
