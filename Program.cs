@@ -10,6 +10,7 @@ builder.Services.AddDbContextFactory<AppDbContext>(options =>
 
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<IRegisteredClientStore, RegisteredClientStore>();
+builder.Services.AddSingleton<SensorReadingStore>();
 builder.Services.AddHostedService<TestSensorService>();
 
 var app = builder.Build();
