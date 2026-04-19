@@ -1,5 +1,4 @@
 using MbtxAssessment;
-using MbtxAssessment.DataStore;
 using MbtxAssessment.SensorReadings;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -20,7 +19,6 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddSignalR();
-builder.Services.AddSingleton<IRegisteredClientStore, RegisteredClientStore>();
 builder.Services.AddSingleton<SensorReadingStore>();
 builder.Services.AddHostedService<TestSensorService>();
 
@@ -49,13 +47,11 @@ app.MapGet("/api/readings/latest", (SensorReadingStore store) =>
 app.MapPost("/api/readings", async (
     SensorReading[] readings,
     SensorReadingStore store,
-    IHubContext<SensorHub> hubContext,
-    IRegisteredClientStore clientStore) =>
+    IHubContext<SensorHub> hubContext) =>
 {
     if (readings.Length == 0)
         return Results.BadRequest("Readings array must not be empty.");
 
-    // assign a guid to each reading that doesn't have one (for client-generated readings)
     foreach (var reading in readings)    {
         if (reading.Id == Guid.Empty)
         {
@@ -65,32 +61,13 @@ app.MapPost("/api/readings", async (
 
     store.SaveAll(readings);
 
-    var registeredClients = clientStore.GetRegisteredClients();
-    if (registeredClients.Count > 0)
+    foreach (var reading in readings)
     {
-        foreach (var reading in readings)
-        {
-            await hubContext.Clients
-                .Groups(registeredClients.ToList())
-                .SendAsync("sensorReadingAvailable", reading);
-
-            // Log each reading broadcast
-            app.Logger.LogInformation($"POST: {reading} ==> [ {registeredClients.Count} ] registered client group(s).");
-        }
+        await hubContext.Clients.All.SendAsync("sensorReadingAvailable", reading);
+        app.Logger.LogInformation($"POST .BROADCAST .ALL  .[{reading.Id}] .[{reading.SequenceNumber}]  .[{reading.SensorId}]  .[{reading.Timestamp}]");
     }
 
     return Results.Ok();
-});
-
-app.MapPost("/clients/register", (string clientId, IRegisteredClientStore store) =>
-{
-    app.Logger.LogInformation($"POST: Client registration attempt: {clientId}");
-    // validate clientId
-    if (string.IsNullOrWhiteSpace(clientId))    {
-        return Results.BadRequest("Client ID cannot be null or empty.");
-    }
-    var added = store.RegisterClient(clientId);
-    return added ? Results.Ok() : Results.Conflict($"Client '{clientId}' is already registered.");
 });
 
 app.MapHub<SensorHub>("/hubs/sensor");

@@ -3,7 +3,7 @@
 GET {{MbtxAssessment_HostAddress}}/api/happy/
 Accept: application/json
 
-###
+### deprecated endpoint - removed from API
 
 POST {{MbtxAssessment_HostAddress}}/clients/register?clientId=my-client-71
 Accept: application/json

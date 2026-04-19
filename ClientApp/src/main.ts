@@ -1,10 +1,7 @@
-import { Component, OnDestroy, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import * as signalR from '@microsoft/signalr';
-import { inject } from '@angular/core';
 
 interface SensorReading {
   id: string;
@@ -18,7 +15,7 @@ interface SensorReading {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule, HttpClientModule],
+  imports: [CommonModule],
   template: `
     <div class="container">
       <h1>Sensor Dashboard</h1>
@@ -26,20 +23,6 @@ interface SensorReading {
       <!-- Status Indicator -->
       <div class="status" [class.live]="isLive()" [class.offline]="!isLive()">
         {{ isLive() ? 'LIVE' : 'OFFLINE' }}
-      </div>
-
-      <!-- Register -->
-      <div class="register-panel">
-        <h2>Register Client</h2>
-        <input
-          [(ngModel)]="clientId"
-          placeholder="Enter client ID"
-          [disabled]="registered()"
-        />
-        <button (click)="register()" [disabled]="!clientId || registered()">
-          Register
-        </button>
-        <span *ngIf="registerMsg()" class="msg">{{ registerMsg() }}</span>
       </div>
 
       <!-- Messages -->
@@ -58,7 +41,7 @@ interface SensorReading {
           </thead>
           <tbody>
             <tr *ngFor="let r of readings()">
-              <td>{{ r.timestamp | date:'HH:mm:ss' }}</td>
+              <td>{{ r.timestamp | date:'yyyy-MM-dd @ HH:mm:ss' }}</td>
               <td>{{ r.sequenceNumber }}</td>
               <td>{{ r.temperature | number:'1.2-2' }}</td>
               <td>{{ r.humidity | number:'1.2-2' }}</td>
@@ -70,38 +53,19 @@ interface SensorReading {
     </div>
   `,
 })
-export class AppComponent implements OnDestroy {
-  private http = inject(HttpClient);
-
-  clientId = '';
-  registered = signal(false);
-  registerMsg = signal('');
+export class AppComponent implements OnInit, OnDestroy {
   isLive = signal(false);
   readings = signal<SensorReading[]>([]);
 
   private hub: signalR.HubConnection | null = null;
 
-  register(): void {
-    if (!this.clientId) return;
-    this.http
-      .post(`/clients/register?clientId=${encodeURIComponent(this.clientId)}`, null, { observe: 'response' })
-      .subscribe({
-        next: () => {
-          this.registered.set(true);
-          this.registerMsg.set(`Registered as "${this.clientId}".`);
-          this.connectHub();
-        },
-        error: (err) => {
-          this.registerMsg.set(err.status === 409
-            ? `"${this.clientId}" is already registered.`
-            : `Error: ${err.statusText}`);
-        },
-      });
+  ngOnInit(): void {
+    this.connectHub();
   }
 
   private connectHub(): void {
     this.hub = new signalR.HubConnectionBuilder()
-      .withUrl(`/hubs/sensor?clientId=${encodeURIComponent(this.clientId)}`)
+      .withUrl('/hubs/sensor')
       .withAutomaticReconnect()
       .build();
 

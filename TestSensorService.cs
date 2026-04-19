@@ -1,12 +1,8 @@
 using Microsoft.AspNetCore.SignalR;
-using MbtxAssessment.DataStore;
 
 namespace MbtxAssessment.SensorReadings;
 
 public class TestSensorService(
-    IHubContext<SensorHub> hubContext,
-    IRegisteredClientStore clientStore,
-    SensorReadingStore sensorReadingStore,
     ILogger<TestSensorService> logger) : BackgroundService
 {
     private readonly Random _random = new();
@@ -17,24 +13,25 @@ public class TestSensorService(
         {
             SensorReading reading = GenerateRandomReading();
 
-            // if (!reading.IsValid)
-            // {
-            //     logger.LogWarning($"Invalid sensor reading: {reading}");
-            //     continue;
-            // }
+            using var httpClient = new HttpClient();
+            try
+            {
+                var response = await httpClient.PostAsJsonAsync("http://localhost:5241/api/readings", new[] { reading }, stoppingToken);
+                if (!response.IsSuccessStatusCode)
+                {
+                    logger.LogError($"THUMP! Failed to post sensor reading: {response.StatusCode}");
+                }
+                else
+                {
+                    logger.LogInformation($"THUMP! Sensor Reading: .[{reading.SequenceNumber}]  .[{reading.SensorId}]  .[{reading.Timestamp}]");
+                }
+            }
+            catch (Exception ex)
+            {
+                // for now, just eat the exception and log it - in a real app, we might want to implement retry logic or other error handling
+                logger.LogError(ex, "THUMP! Exception while posting sensor reading");
+            }
 
-            // var registeredClients = clientStore.GetRegisteredClients();
-
-            // if (registeredClients.Count > 0)
-            // {
-
-            //     await hubContext.Clients
-            //         .Groups(registeredClients.ToList())
-            //         .SendAsync("sensorReadingAvailable", reading, stoppingToken);
-
-            // }
-
-            logger.LogInformation($"TEST: Thump!  .[ {reading.SequenceNumber} ]  .[ {reading.SensorId} ]  .[{reading.Timestamp} ]");
             await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
         }
     }
