@@ -55,6 +55,14 @@ app.MapPost("/api/readings", async (
     if (readings.Length == 0)
         return Results.BadRequest("Readings array must not be empty.");
 
+    // assign a guid to each reading that doesn't have one (for client-generated readings)
+    foreach (var reading in readings)    {
+        if (reading.Id == Guid.Empty)
+        {
+            reading.Id = Guid.NewGuid();
+        }
+    }
+
     store.SaveAll(readings);
 
     var registeredClients = clientStore.GetRegisteredClients();
@@ -64,7 +72,10 @@ app.MapPost("/api/readings", async (
         {
             await hubContext.Clients
                 .Groups(registeredClients.ToList())
-                .SendAsync("randomFloat", reading);
+                .SendAsync("sensorReadingAvailable", reading);
+
+            // Log each reading broadcast
+            app.Logger.LogInformation($"POST: {reading} ==> [ {registeredClients.Count} ] registered client group(s).");
         }
     }
 
@@ -73,6 +84,7 @@ app.MapPost("/api/readings", async (
 
 app.MapPost("/clients/register", (string clientId, IRegisteredClientStore store) =>
 {
+    app.Logger.LogInformation($"POST: Client registration attempt: {clientId}");
     // validate clientId
     if (string.IsNullOrWhiteSpace(clientId))    {
         return Results.BadRequest("Client ID cannot be null or empty.");

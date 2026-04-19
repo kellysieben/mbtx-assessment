@@ -5,7 +5,7 @@ Accept: application/json
 
 ###
 
-POST {{MbtxAssessment_HostAddress}}/clients/register?clientId=my-client-2
+POST {{MbtxAssessment_HostAddress}}/clients/register?clientId=my-client-71
 Accept: application/json
 
 ###
@@ -20,14 +20,14 @@ POST {{MbtxAssessment_HostAddress}}/api/readings
 Content-Type: application/json  
 
 [
-    {
-        "temperature": 25.5,
-        "humidity": 60.0,
-        "timestamp": "2024-06-01T12:00:00Z"
-    },
-    {
-        "temperature": 26.0,
-        "humidity": 58.0,
-        "timestamp": "2024-06-01T12:10:00Z"
-    }
+    {"SensorId":"post-test-xx","SequenceNumber":639122072626652170,"Timestamp":"2026-04-19T14:54:22.6652176Z","Temperature":"22.8036886408401","Humidity":"18.0302638638733","Co2Ppm":905},
+    {"SensorId":"post-test-xx","SequenceNumber":639122072526617516,"Timestamp":"2026-04-19T14:54:12.6617522Z","Temperature":"26.6159087578339","Humidity":"3.71378329915919","Co2Ppm":492},
+    {"SensorId":"post-test-xx","SequenceNumber":639122072426539132,"Timestamp":"2026-04-19T14:54:02.6539139Z","Temperature":"22.8655140792149","Humidity":"78.9639396083142","Co2Ppm":440},
+    {"SensorId":"post-test-xx","SequenceNumber":639122072326409230,"Timestamp":"2026-04-19T14:53:52.6409236Z","Temperature":"20.0771773715974","Humidity":"44.415377226651","Co2Ppm":510},
+    {"SensorId":"post-test-xx","SequenceNumber":639122072226344881,"Timestamp":"2026-04-19T14:53:42.6344889Z","Temperature":"17.233335955681","Humidity":"8.67895285261617","Co2Ppm":58},
+    {"SensorId":"post-test-xx","SequenceNumber":639122072126299270,"Timestamp":"2026-04-19T14:53:32.6299276Z","Temperature":"24.9038561041823","Humidity":"79.3373259937892","Co2Ppm":509},
+    {"SensorId":"post-test-xx","SequenceNumber":639122072026187906,"Timestamp":"2026-04-19T14:53:22.6187912Z","Temperature":"15.0356355803785","Humidity":"9.55243509157219","Co2Ppm":121},
+    {"SensorId":"post-test-xx","SequenceNumber":639122071926052571,"Timestamp":"2026-04-19T14:53:12.6052578Z","Temperature":"26.9520665269613","Humidity":"16.8782889200674","Co2Ppm":246},
+    {"SensorId":"post-test-xx","SequenceNumber":639122071825986317,"Timestamp":"2026-04-19T14:53:02.5986325Z","Temperature":"17.8433456502818","Humidity":"26.4436401525775","Co2Ppm":621},
+    {"SensorId":"post-test-xx","SequenceNumber":639122071725883650,"Timestamp":"2026-04-19T14:52:52.5883655Z","Temperature":"23.0650728751603","Humidity":"31.7844056611248","Co2Ppm":235}
 ]

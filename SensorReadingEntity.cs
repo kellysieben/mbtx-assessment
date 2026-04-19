@@ -12,5 +12,4 @@ public class SensorReadingEntity
     public decimal Temperature { get; set; }
     public decimal Humidity { get; set; }
     public int Co2Ppm { get; set; }
-    public bool IsValid { get; set; }
 }

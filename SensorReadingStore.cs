@@ -15,8 +15,7 @@ public class SensorReadingStore(IDbContextFactory<AppDbContext> dbContextFactory
             Timestamp = reading.Timestamp,
             Temperature = reading.Temperature,
             Humidity = reading.Humidity,
-            Co2Ppm = reading.Co2Ppm,
-            IsValid = reading.IsValid
+            Co2Ppm = reading.Co2Ppm
         });
         db.SaveChanges();
     }
@@ -33,7 +32,6 @@ public class SensorReadingStore(IDbContextFactory<AppDbContext> dbContextFactory
             Temperature = reading.Temperature,
             Humidity = reading.Humidity,
             Co2Ppm = reading.Co2Ppm,
-            IsValid = reading.IsValid
         }));
         db.SaveChanges();
     }
