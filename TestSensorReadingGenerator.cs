@@ -1,9 +1,7 @@
-using Microsoft.AspNetCore.SignalR;
-
 namespace MbtxAssessment.SensorReadings;
 
-public class TestSensorService(
-    ILogger<TestSensorService> logger) : BackgroundService
+public class TestSensorReadingGenerator(
+    ILogger<TestSensorReadingGenerator> logger) : BackgroundService
 {
     private readonly Random _random = new();
 
