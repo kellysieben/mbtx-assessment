@@ -105,7 +105,7 @@ export class AppComponent implements OnDestroy {
       .withAutomaticReconnect()
       .build();
 
-    this.hub.on('randomFloat', (reading: SensorReading) => {
+    this.hub.on('sensorReadingAvailable', (reading: SensorReading) => {
       this.readings.update((prev) => [reading, ...prev].slice(0, 50));
     });
 

@@ -7,15 +7,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 {
     public DbSet<RegisteredClientEntity> RegisteredClients => Set<RegisteredClientEntity>();
     public DbSet<SensorReadingEntity> SensorReadings => Set<SensorReadingEntity>();
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<RegisteredClientEntity>(entity =>
-        {
-            entity.HasKey(e => e.ClientId);
-            entity.Property(e => e.ClientId)
-                  .HasMaxLength(256)
-                  .UseCollation("NOCASE");
-        });
+        modelBuilder.Entity<RegisteredClientEntity>()
+            .HasKey(c => c.ClientId);
+
+        modelBuilder.Entity<SensorReadingEntity>()
+            .HasKey(r => r.Id);
     }
 }

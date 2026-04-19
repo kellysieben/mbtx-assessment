@@ -15,11 +15,11 @@ public class TestSensorService(
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            SensorReading message = GetReading();
+            SensorReading reading = GenerateRandomReading();
 
-            if (!message.IsValid)
+            if (!reading.IsValid)
             {
-                logger.LogWarning($"Invalid sensor reading: {message}");
+                logger.LogWarning($"Invalid sensor reading: {reading}");
                 continue;
             }
 
@@ -30,18 +30,18 @@ public class TestSensorService(
 
                 await hubContext.Clients
                     .Groups(registeredClients.ToList())
-                    .SendAsync("randomFloat", message, stoppingToken);
+                    .SendAsync("sensorReadingAvailable", reading, stoppingToken);
 
             }
 
-            logger.LogInformation($"BROADCAST: {message} ==> [ {registeredClients.Count} ] registered client group(s).");
+            logger.LogInformation($"BROADCAST: {reading} ==> [ {registeredClients.Count} ] registered client group(s).");
             await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
         }
     }
 
-    private SensorReading GetReading()
+    private SensorReading GenerateRandomReading()
     {
-        var message = new SensorReading
+        var reading = new SensorReading
         {
             Id = Guid.NewGuid(),
             SensorId = "sensor-test-001",
@@ -51,7 +51,7 @@ public class TestSensorService(
             Humidity = (decimal)(_random.NextDouble() * 100),
             Co2Ppm = (int)(_random.NextDouble() * 1000)
         };
-        sensorReadingStore.Save(message);
-        return message;
+        sensorReadingStore.Save(reading);
+        return reading;
     }
 }
