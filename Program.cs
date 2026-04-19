@@ -19,12 +19,12 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<SensorReadingStore>();
+builder.Services.AddSingleton<AnomalyStore>();
 builder.Services.AddSingleton<SensorService>();
 builder.Services.AddHostedService<TestSensorReadingGenerator>();
 
 var app = builder.Build();
 
-// Ensure database is created
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();

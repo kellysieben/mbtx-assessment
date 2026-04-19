@@ -5,18 +5,22 @@ namespace MbtxAssessment;
 
 public class SensorService
 {
-    private readonly SensorReadingStore _store;
+    private readonly SensorReadingStore _sensorReadingStore;
+    private readonly AnomalyStore _anomalyStore;
     private readonly ILogger<SensorService> _logger;
     private readonly IHubContext<SensorHub> _hubContext;
+    private readonly AnomalyDetector _anomalyDetectorTemperature = new("Temperature");
+    private readonly AnomalyDetector _anomalyDetectorHumidity = new("Humidity");
+    private readonly AnomalyDetector _anomalyDetectorCo2Ppm = new("Co2Ppm");
 
-    public SensorService(SensorReadingStore store, ILogger<SensorService> logger, IHubContext<SensorHub> hubContext)
+    public SensorService(SensorReadingStore sensorReadingStore, AnomalyStore anomalyStore, ILogger<SensorService> logger, IHubContext<SensorHub> hubContext)
     {
-        _store = store;
+        _sensorReadingStore = sensorReadingStore;
+        _anomalyStore = anomalyStore;
         _logger = logger;
         _hubContext = hubContext;
     }
 
-// This method processes new sensor readings by saving them to the database and broadcasting them to connected clients via SignalR. 
     public async Task ProcessNewReadings(IEnumerable<SensorReading> readings)
     {
         if (readings == null || !readings.Any())
@@ -33,17 +37,34 @@ public class SensorService
             }
         }
 
-        _store.SaveAll(readings);
+        _sensorReadingStore.SaveAll(readings);
 
         foreach (var reading in readings)
         {
             await _hubContext.Clients.All.SendAsync("sensorReadingAvailable", reading);
             _logger.LogInformation($"Broadcasted new sensor reading: Id={reading.Id}, SequenceNumber={reading.SequenceNumber}, SensorId={reading.SensorId}, Timestamp={reading.Timestamp}");
+            ProcessAnomalies(reading);
         }
     }
 
     public SensorReadingEntity? GetLatestReading()
     {
-        return _store.GetLatest();
+        return _sensorReadingStore.GetLatest();
+    }
+
+    private void ProcessAnomalies(SensorReading reading)
+    {
+        var anomalies = new List<Anomaly?>
+        {
+            _anomalyDetectorTemperature.Analyze(reading.Temperature),
+            _anomalyDetectorHumidity.Analyze(reading.Humidity),
+            _anomalyDetectorCo2Ppm.Analyze(reading.Co2Ppm)
+        }.Where(a => a != null).ToList();
+
+        foreach (var anomaly in anomalies)
+        {
+            _logger.LogWarning($"Anomaly detected: {anomaly?.Reason}");
+            _anomalyStore.Save(anomaly);
+        }
     }
 }
