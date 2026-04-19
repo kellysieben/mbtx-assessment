@@ -1,24 +1,30 @@
-using System.Collections.Concurrent;
+using Microsoft.EntityFrameworkCore;
 
 namespace MbtxAssessment.DataStore;
 
-public sealed class RegisteredClientStore : IRegisteredClientStore
+public sealed class RegisteredClientStore(IDbContextFactory<AppDbContext> dbContextFactory) : IRegisteredClientStore
 {
-    private readonly ConcurrentDictionary<string, byte> _registeredClients =
-        new(StringComparer.OrdinalIgnoreCase);
-
     public bool RegisterClient(string clientId)
     {
-        return _registeredClients.TryAdd(clientId.Trim(), 0);
+        using var db = dbContextFactory.CreateDbContext();
+        var trimmed = clientId.Trim();
+        if (db.RegisteredClients.Any(c => c.ClientId == trimmed))
+            return false;
+
+        db.RegisteredClients.Add(new RegisteredClientEntity { ClientId = trimmed, RegisteredAt = DateTime.Now });
+        db.SaveChanges();
+        return true;
     }
 
     public bool IsRegistered(string clientId)
     {
-        return _registeredClients.ContainsKey(clientId.Trim());
+        using var db = dbContextFactory.CreateDbContext();
+        return db.RegisteredClients.Any(c => c.ClientId == clientId.Trim());
     }
 
     public IReadOnlyCollection<string> GetRegisteredClients()
     {
-        return _registeredClients.Keys.ToArray();
+        using var db = dbContextFactory.CreateDbContext();
+        return db.RegisteredClients.Select(c => c.ClientId).ToArray();
     }
 }

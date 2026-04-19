@@ -1,13 +1,25 @@
+using MbtxAssessment;
 using MbtxAssessment.DataStore;
 using MbtxAssessment.SensorReadings;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContextFactory<AppDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=mbtx.db"));
 
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<IRegisteredClientStore, RegisteredClientStore>();
 builder.Services.AddHostedService<TestSensorService>();
 
 var app = builder.Build();
+
+// Ensure database is created
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.EnsureCreated();
+}
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
