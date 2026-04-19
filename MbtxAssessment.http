@@ -14,3 +14,20 @@ GET {{MbtxAssessment_HostAddress}}/api/readings/latest
 Accept: application/json
 
 ###
+
+### takes array of sensor readings and posts to the API, which will then broadcast to connected clients via SignalR
+POST {{MbtxAssessment_HostAddress}}/api/readings
+Content-Type: application/json  
+
+[
+    {
+        "temperature": 25.5,
+        "humidity": 60.0,
+        "timestamp": "2024-06-01T12:00:00Z"
+    },
+    {
+        "temperature": 26.0,
+        "humidity": 58.0,
+        "timestamp": "2024-06-01T12:10:00Z"
+    }
+]

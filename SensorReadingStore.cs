@@ -21,6 +21,23 @@ public class SensorReadingStore(IDbContextFactory<AppDbContext> dbContextFactory
         db.SaveChanges();
     }
 
+    public void SaveAll(IEnumerable<SensorReading> readings)
+    {
+        using var db = dbContextFactory.CreateDbContext();
+        db.SensorReadings.AddRange(readings.Select(reading => new SensorReadingEntity
+        {
+            Id = reading.Id,
+            SensorId = reading.SensorId,
+            SequenceNumber = reading.SequenceNumber,
+            Timestamp = reading.Timestamp,
+            Temperature = reading.Temperature,
+            Humidity = reading.Humidity,
+            Co2Ppm = reading.Co2Ppm,
+            IsValid = reading.IsValid
+        }));
+        db.SaveChanges();
+    }
+
     public SensorReadingEntity? GetLatest()
     {
         using var db = dbContextFactory.CreateDbContext();

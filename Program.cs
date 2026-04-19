@@ -1,6 +1,7 @@
 using MbtxAssessment;
 using MbtxAssessment.DataStore;
 using MbtxAssessment.SensorReadings;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -43,6 +44,31 @@ app.MapGet("/api/readings/latest", (SensorReadingStore store) =>
 {
     var latest = store.GetLatest();
     return latest is null ? Results.NotFound() : Results.Ok(latest);
+});
+
+app.MapPost("/api/readings", async (
+    SensorReading[] readings,
+    SensorReadingStore store,
+    IHubContext<SensorHub> hubContext,
+    IRegisteredClientStore clientStore) =>
+{
+    if (readings.Length == 0)
+        return Results.BadRequest("Readings array must not be empty.");
+
+    store.SaveAll(readings);
+
+    var registeredClients = clientStore.GetRegisteredClients();
+    if (registeredClients.Count > 0)
+    {
+        foreach (var reading in readings)
+        {
+            await hubContext.Clients
+                .Groups(registeredClients.ToList())
+                .SendAsync("randomFloat", reading);
+        }
+    }
+
+    return Results.Ok();
 });
 
 app.MapPost("/clients/register", (string clientId, IRegisteredClientStore store) =>
