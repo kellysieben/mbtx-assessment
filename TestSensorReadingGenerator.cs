@@ -42,10 +42,21 @@ public class TestSensorReadingGenerator(
             SensorId = "sensor-test-thump",
             SequenceNumber = DateTime.UtcNow.Ticks,
             Timestamp = DateTime.UtcNow,
-            Temperature = (decimal)(15 + _random.NextDouble() * 15),
-            Humidity = (decimal)(_random.NextDouble() * 100),
-            Co2Ppm = (int)(_random.NextDouble() * 1000)
+            Temperature = (decimal)GenerateValue(baseline: 22, noise: 2.0, spikeChance: 0.07, spikeMin: 9, spikeMax: 13),
+            Humidity    = (decimal)GenerateValue(baseline: 60, noise: 5.0, spikeChance: 0.07, spikeMin: 25, spikeMax: 35),
+            Co2Ppm      = (int)   GenerateValue(baseline: 600, noise: 80,  spikeChance: 0.07, spikeMin: 400, spikeMax: 600),
         };
         return reading;
+    }
+
+    private double GenerateValue(double baseline, double noise, double spikeChance, double spikeMin, double spikeMax)
+    {
+        double value = baseline + (_random.NextDouble() * 2 - 1) * noise;
+        if (_random.NextDouble() < spikeChance)
+        {
+            double spike = spikeMin + _random.NextDouble() * (spikeMax - spikeMin);
+            value += _random.NextDouble() < 0.5 ? spike : -spike;
+        }
+        return value;
     }
 }
