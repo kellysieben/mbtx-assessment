@@ -91,6 +91,15 @@ h2 {
   border: 1px solid #ddd;
   border-radius: 6px;
   padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.anomalies-panel {
+  border-color: #f5c6cb;
+}
+
+.anomalies-panel th {
+  background: #f8d7da;
 }
 
 .empty {

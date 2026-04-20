@@ -43,7 +43,7 @@ public class SensorService
         {
             await _hubContext.Clients.All.SendAsync("sensorReadingAvailable", reading);
             _logger.LogInformation($"Broadcasted new sensor reading: Id={reading.Id}, SequenceNumber={reading.SequenceNumber}, SensorId={reading.SensorId}, Timestamp={reading.Timestamp}");
-            ProcessAnomalies(reading);
+            await ProcessAnomalies(reading);
         }
     }
 
@@ -52,7 +52,7 @@ public class SensorService
         return _sensorReadingStore.GetLatest();
     }
 
-    private void ProcessAnomalies(SensorReading reading)
+    private async Task ProcessAnomalies(SensorReading reading)
     {
         var anomalies = new List<Anomaly?>
         {
@@ -64,6 +64,7 @@ public class SensorService
         foreach (var anomaly in anomalies)
         {
             _logger.LogWarning($"Anomaly detected: {anomaly?.Reason}");
+            await _hubContext.Clients.All.SendAsync("anomalyDetected", anomaly);
             _anomalyStore.Save(anomaly);
         }
     }

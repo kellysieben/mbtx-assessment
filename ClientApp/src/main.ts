@@ -12,6 +12,15 @@ interface SensorReading {
   co2Ppm: number;
 }
 
+interface Anomaly {
+  id: string;
+  detectedAt: string;
+  sensorType: string;
+  value: number;
+  zScore: number;
+  reason: string;
+}
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -23,6 +32,30 @@ interface SensorReading {
       <!-- Status Indicator -->
       <div class="status" [class.live]="isLive()" [class.offline]="!isLive()">
         {{ isLive() ? 'LIVE' : 'OFFLINE' }}
+      </div>
+
+      <!-- Anomalies -->
+      <div class="readings-panel anomalies-panel">
+        <h2>Anomalies</h2>
+        <p *ngIf="anomalies().length === 0" class="empty">No anomalies detected yet.</p>
+        <table *ngIf="anomalies().length > 0">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Sensor Type</th>
+              <th>Value</th>
+              <th>Reason</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of anomalies()">
+              <td>{{ a.detectedAt | date:'yyyy-MM-dd @ HH:mm:ss' }}</td>
+              <td>{{ a.sensorType }}</td>
+              <td>{{ a.value | number:'1.2-2' }}</td>
+              <td>{{ a.reason }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <!-- Messages -->
@@ -56,6 +89,7 @@ interface SensorReading {
 export class AppComponent implements OnInit, OnDestroy {
   isLive = signal(false);
   readings = signal<SensorReading[]>([]);
+  anomalies = signal<Anomaly[]>([]);
 
   private hub: signalR.HubConnection | null = null;
 
@@ -71,6 +105,10 @@ export class AppComponent implements OnInit, OnDestroy {
 
     this.hub.on('sensorReadingAvailable', (reading: SensorReading) => {
       this.readings.update((prev) => [reading, ...prev].slice(0, 50));
+    });
+
+    this.hub.on('anomalyDetected', (anomaly: Anomaly) => {
+      this.anomalies.update((prev) => [anomaly, ...prev].slice(0, 50));
     });
 
     this.hub.onclose(() => this.isLive.set(false));
