@@ -1,8 +1,13 @@
 # mbtx-assessment
 Greenhouse Guard test assessment
 
-## alpha
-* Abandoned
+## Branches
 
-## beta
+### main
+* not used for development (do not consider)
+
+### alpha
+* not active
+
+### beta
 * current active development
