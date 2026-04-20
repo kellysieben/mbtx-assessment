@@ -23,4 +23,27 @@ public class AnomalyStore(IDbContextFactory<AppDbContext> dbContextFactory)
         });
         db.SaveChanges();
     }
+
+    public List<Anomaly> GetAll(int? limit = null)
+    {
+        using var db = dbContextFactory.CreateDbContext();
+        IQueryable<AnomalyEntity> query = db.Anomalies
+            .AsNoTracking()
+            .OrderByDescending(a => a.DetectedAt);
+
+        if (limit.HasValue)
+            query = query.Take(limit.Value);
+
+        return query
+            .Select(a => new Anomaly
+            {
+                Id = a.Id,
+                DetectedAt = a.DetectedAt,
+                SensorType = a.SensorType,
+                Value = a.Value,
+                ZScore = a.ZScore,
+                Reason = a.Reason
+            })
+            .ToList();
+    }
 }

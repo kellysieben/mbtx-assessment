@@ -2,7 +2,7 @@ using MbtxAssessment.SensorReadings;
 
 namespace MbtxAssessment;
 
-public static class ApiEndpointExtensions
+public static class Endpoints
 {
     public static WebApplication MapApiEndpoints(this WebApplication app)
     {
@@ -12,6 +12,12 @@ public static class ApiEndpointExtensions
         {
             var latest = service.GetLatestReading();
             return latest is null ? Results.NotFound() : Results.Ok(latest);
+        });
+
+        app.MapGet("/api/anomaly", (AnomalyStore store, int? limit) =>
+        {
+            var anomalies = store.GetAll(limit);
+            return Results.Ok(anomalies);
         });
 
         app.MapPost("/api/readings", async (
