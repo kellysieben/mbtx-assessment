@@ -8,19 +8,19 @@
 export const SENSOR_LIMITS = {
   temperature: {
     // °C
-    greenMax: 28,   // green:  ≤ 28 °C
-    yellowMax: 35,  // yellow: 28–35 °C  |  red: > 35 °C
+    greenMax: 21,   // green:  ≤ 21 °C
+    yellowMax: 30,  // yellow: 21–30 °C  |  red: > 30 °C
   },
   humidity: {
     // %
-    greenMin: 40,   // green:  40–70 %
-    greenMax: 70,
-    yellowMin: 20,  // yellow: 20–40 % or 70–85 %  |  red: < 20 % or > 85 %
-    yellowMax: 85,
+    greenMin: 57,   // green:  57-65 %
+    greenMax: 62,
+    yellowMin: 40,  // yellow: 40–57 % or 62–75 %  |  red: < 40 % or > 75 %
+    yellowMax: 75,
   },
   co2Ppm: {
     // ppm
-    greenMax: 1000,  // green:  ≤ 1000 ppm
-    yellowMax: 2000, // yellow: 1000–2000 ppm  |  red: > 2000 ppm
+    greenMax: 620,  // green:  ≤ 620 ppm
+    yellowMax: 650, // yellow: 620–650 ppm  |  red: > 650 ppm
   },
 };
