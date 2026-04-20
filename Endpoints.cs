@@ -25,7 +25,7 @@ public static class Endpoints
             SensorService service) =>
         {
             await service.ProcessNewReadings(readings);
-            return Results.Ok();  // Results.BadRequest("Readings array must not be empty.");
+            return Results.Ok();  // todo: error checking on service call ... Results.BadRequest("reason why it failed");
         });
 
         app.MapHub<SensorHub>("/hubs/sensor");

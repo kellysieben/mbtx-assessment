@@ -1,6 +1,7 @@
-import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
+import { HttpClient, provideHttpClient } from '@angular/common/http';
 import * as signalR from '@microsoft/signalr';
 import { SENSOR_LIMITS } from './sensor-config';
 
@@ -180,9 +181,26 @@ export class AppComponent implements OnInit, OnDestroy {
   });
 
   private hub: signalR.HubConnection | null = null;
+  private http = inject(HttpClient);
 
   ngOnInit(): void {
+    this.loadInitialAnomalies();
+    this.loadLatestReading();
     this.connectHub();
+  }
+
+  private loadInitialAnomalies(): void {
+    this.http.get<Anomaly[]>('/api/anomaly?limit=20').subscribe({
+      next: (data) => this.anomalies.set(data),
+      error: (err) => console.error('Failed to load initial anomalies', err),
+    });
+  }
+
+  private loadLatestReading(): void {
+    this.http.get<SensorReading>('/api/readings/latest').subscribe({
+      next: (data) => this.latestReading.set(data),
+      error: (err) => console.error('Failed to load latest reading', err),
+    });
   }
 
   private connectHub(): void {
@@ -199,7 +217,9 @@ export class AppComponent implements OnInit, OnDestroy {
     });
 
     this.hub.on('anomalyDetected', (anomaly: Anomaly) => {
-      this.anomalies.update((prev) => [anomaly, ...prev].slice(0, 50));
+      this.anomalies.update((prev) =>
+        prev.some(a => a.id === anomaly.id) ? prev : [anomaly, ...prev].slice(0, 50)
+      );
     });
 
     this.hub.onclose(() => this.isLive.set(false));
@@ -219,4 +239,6 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 }
 
-bootstrapApplication(AppComponent).catch(console.error);
+bootstrapApplication(AppComponent, {
+  providers: [provideHttpClient()],
+}).catch(console.error);

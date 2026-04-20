@@ -5,6 +5,7 @@ public class AnomalyDetector
     private readonly string _sensorType;
     private readonly Queue<decimal> _recentValues = new(20);
     private const int FifoCapacity = 20;
+    private const decimal AnomalyThresholdZScore = 2.5m;
 
     public AnomalyDetector(string sensorType)
     {
@@ -24,7 +25,7 @@ public class AnomalyDetector
         decimal stddev = (decimal)Math.Sqrt(_recentValues.Average(v => Math.Pow((double)(v - mean), 2)));
         decimal zScore = stddev == 0 ? 0 : (newValue - mean) / stddev;
 
-        if (Math.Abs(zScore) > 1.5m)
+        if (Math.Abs(zScore) > AnomalyThresholdZScore)
         {
             return new Anomaly
             {
