@@ -27,11 +27,16 @@ interface Anomaly {
   imports: [CommonModule],
   template: `
     <div class="container">
-      <h1>Sensor Dashboard</h1>
+      <h1>Greenhouse Monitor</h1>
 
       <!-- Status Indicator -->
-      <div class="status" [class.live]="isLive()" [class.offline]="!isLive()">
-        {{ isLive() ? 'LIVE' : 'OFFLINE' }}
+      <div class="status-bar">
+        <div class="status" [class.live]="isLive()" [class.offline]="!isLive()">
+          {{ isLive() ? 'LIVE' : 'OFFLINE' }}
+        </div>
+        <span class="last-update" *ngIf="lastReadingTimestamp()">
+          Last reading: {{ lastReadingTimestamp() | date:'yyyy-MM-dd @ HH:mm:ss' }}
+        </span>
       </div>
 
       <!-- Anomalies -->
@@ -98,9 +103,12 @@ interface Anomaly {
 export class AppComponent implements OnInit, OnDestroy {
   readonly pageSize = 10;
 
+  private readonly lastReadingKey = 'lastSensorReadingTimestamp';
+
   isLive = signal(false);
   readings = signal<SensorReading[]>([]);
   anomalies = signal<Anomaly[]>([]);
+  lastReadingTimestamp = signal<string | null>(localStorage.getItem(this.lastReadingKey));
 
   readingsPage$ = signal(1);
   anomaliesPage$ = signal(1);
@@ -134,6 +142,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
     this.hub.on('sensorReadingAvailable', (reading: SensorReading) => {
       this.readings.update((prev) => [reading, ...prev].slice(0, 50));
+      this.lastReadingTimestamp.set(reading.timestamp);
+      localStorage.setItem(this.lastReadingKey, reading.timestamp);
     });
 
     this.hub.on('anomalyDetected', (anomaly: Anomaly) => {
