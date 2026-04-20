@@ -7,7 +7,7 @@ Greenhouse Guard test assessment
 * not used for development (do not consider)
 
 ### alpha
-* not active
+* not active (do not consider)
 
 ### beta
 * current active development
