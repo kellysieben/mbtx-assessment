@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 import * as signalR from '@microsoft/signalr';
+import { SENSOR_LIMITS } from './sensor-config';
 
 interface SensorReading {
   id: string;
@@ -37,6 +38,28 @@ interface Anomaly {
         <span class="last-update" *ngIf="lastReadingTimestamp()">
           Last reading: {{ lastReadingTimestamp() | date:'yyyy-MM-dd @ HH:mm:ss' }}
         </span>
+      </div>
+
+      <!-- Sensor Cards -->
+      <div class="sensor-cards">
+        <div class="sensor-card" [ngClass]="'status-' + tempStatus()">
+          <div class="card-label">Temperature</div>
+          <div class="card-value" *ngIf="latestReading()">{{ latestReading()!.temperature | number:'1.1-1' }} °C</div>
+          <div class="card-value card-no-data" *ngIf="!latestReading()">—</div>
+          <div class="card-unit">degrees Celsius</div>
+        </div>
+        <div class="sensor-card" [ngClass]="'status-' + humidityStatus()">
+          <div class="card-label">Humidity</div>
+          <div class="card-value" *ngIf="latestReading()">{{ latestReading()!.humidity | number:'1.1-1' }} %</div>
+          <div class="card-value card-no-data" *ngIf="!latestReading()">—</div>
+          <div class="card-unit">relative humidity</div>
+        </div>
+        <div class="sensor-card" [ngClass]="'status-' + co2Status()">
+          <div class="card-label">CO&#x2082;</div>
+          <div class="card-value" *ngIf="latestReading()">{{ latestReading()!.co2Ppm | number:'1.0-0' }} ppm</div>
+          <div class="card-value card-no-data" *ngIf="!latestReading()">—</div>
+          <div class="card-unit">parts per million</div>
+        </div>
       </div>
 
       <!-- Anomalies -->
@@ -108,7 +131,35 @@ export class AppComponent implements OnInit, OnDestroy {
   isLive = signal(false);
   readings = signal<SensorReading[]>([]);
   anomalies = signal<Anomaly[]>([]);
+  latestReading = signal<SensorReading | null>(null);
   lastReadingTimestamp = signal<string | null>(localStorage.getItem(this.lastReadingKey));
+
+  tempStatus = computed(() => {
+    const r = this.latestReading();
+    if (!r) return 'none';
+    const t = Number(r.temperature);
+    if (t <= SENSOR_LIMITS.temperature.greenMax) return 'green';
+    if (t <= SENSOR_LIMITS.temperature.yellowMax) return 'yellow';
+    return 'red';
+  });
+
+  humidityStatus = computed(() => {
+    const r = this.latestReading();
+    if (!r) return 'none';
+    const h = Number(r.humidity);
+    if (h >= SENSOR_LIMITS.humidity.greenMin && h <= SENSOR_LIMITS.humidity.greenMax) return 'green';
+    if (h >= SENSOR_LIMITS.humidity.yellowMin && h <= SENSOR_LIMITS.humidity.yellowMax) return 'yellow';
+    return 'red';
+  });
+
+  co2Status = computed(() => {
+    const r = this.latestReading();
+    if (!r) return 'none';
+    const c = r.co2Ppm;
+    if (c <= SENSOR_LIMITS.co2Ppm.greenMax) return 'green';
+    if (c <= SENSOR_LIMITS.co2Ppm.yellowMax) return 'yellow';
+    return 'red';
+  });
 
   readingsPage$ = signal(1);
   anomaliesPage$ = signal(1);
@@ -142,6 +193,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
     this.hub.on('sensorReadingAvailable', (reading: SensorReading) => {
       this.readings.update((prev) => [reading, ...prev].slice(0, 50));
+      this.latestReading.set(reading);
       this.lastReadingTimestamp.set(reading.timestamp);
       localStorage.setItem(this.lastReadingKey, reading.timestamp);
     });
