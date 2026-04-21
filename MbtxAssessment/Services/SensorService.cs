@@ -66,7 +66,7 @@ public class SensorService
         {
             _logger.LogWarning($"Anomaly detected: {anomaly?.Reason}");
             await _hubContext.Clients.All.SendAsync("anomalyDetected", anomaly);
-            _anomalyStore.Save(anomaly);
+            _anomalyStore.Save(anomaly!);
         }
     }
 }

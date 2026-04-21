@@ -6,6 +6,7 @@ public class TestSensorReadingGenerator(
     ILogger<TestSensorReadingGenerator> logger) : BackgroundService
 {
     private readonly Random _random = new();
+    private const int DelaySeconds = 10;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -26,13 +27,14 @@ public class TestSensorReadingGenerator(
                     logger.LogInformation($"THUMP! Sensor Reading: .[{reading.SequenceNumber}]  .[{reading.SensorId}]  .[{reading.Timestamp}]");
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // for now, just eat the exception and log it - in a real app, we might want to implement retry logic or other error handling
-                logger.LogError(ex, "THUMP! Exception while posting sensor reading");
+                // For now, just eat the exception and optimistically retry.
+                // Noted that this is not the best plan. In a real app, we want to implement retry logic or other error handling.
+                logger.LogError($"THUMP! Bad comms with server. Will retry in {DelaySeconds} seconds");
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(DelaySeconds), stoppingToken);
         }
     }
 
