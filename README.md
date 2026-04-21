@@ -4,10 +4,11 @@ Greenhouse Guard test assessment
 ## Branches
 
 ### main
-* not used for development (do not consider)
+* main is main.
+* Demo project from here.
 
 ### alpha
-* not active (do not consider)
+* abandoned (do not use or consider)
 
 ### beta
 * current active development
