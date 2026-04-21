@@ -13,6 +13,9 @@ Greenhouse Guard test assessment
 ### beta
 * current active development
 
+### using-blazor-ui
+* swap out Angular for blazor
+
 ## Build & Run
 
 ### Install prerequisites
@@ -21,12 +24,8 @@ Greenhouse Guard test assessment
 
 ### Build
 * clone repo
-* checkout 'main' if not already there
+* checkout 'using-blazor-ui' if not already there
 * dotnet restore mbtx-assessment.sln (only required on initial checkout)
-* cd ClientApp
-* npm ci (only required on initial checkout)
-* npm run build
-* cd ..
 * dotnet build
 * dotnet test
 
