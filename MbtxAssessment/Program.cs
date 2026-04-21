@@ -34,9 +34,6 @@ using (var scope = app.Services.CreateScope())
 
 app.UseCors();
 
-app.UseDefaultFiles();
-app.UseStaticFiles();
-
 app.MapApiEndpoints();
 
 app.Run();

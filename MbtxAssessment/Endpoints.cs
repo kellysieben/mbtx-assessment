@@ -32,8 +32,6 @@ public static class Endpoints
 
         app.MapHub<SensorHub>("/hubs/sensor");
 
-        app.MapFallbackToFile("index.html");
-
         return app;
     }
 }
