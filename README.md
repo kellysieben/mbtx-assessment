@@ -34,6 +34,7 @@ Greenhouse Guard test assessment
 * dotnet run --project MbtxAssessment/mbtx-assessment.csproj
 * NOTE #1: When running from command line, you have to specify the --project since setting a default project in .sln file isn't available.
 * NOTE #2: On start-up, you may see an error message "THUMP! Bad comms with server. Will retry in 10 seconds".  This is because the TestSensorReadingGenerator is started by the app, and at first it may try to post readings before the API is ready to receive them.
+* navigate to --> localhost:5241
 
 ## Notes & Future Considerations
 * Simplified the SignalR hub broadcast to "send all", removing the need for client registration and store. A more robust client handler might be needed in the future.
