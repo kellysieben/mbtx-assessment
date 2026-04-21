@@ -1,7 +1,8 @@
-using MbtxAssessment.SensorReadings;
+using MbtxAssessment.Data;
+using MbtxAssessment.Models;
 using Microsoft.AspNetCore.SignalR;
 
-namespace MbtxAssessment;
+namespace MbtxAssessment.Services;
 
 public class SensorService
 {

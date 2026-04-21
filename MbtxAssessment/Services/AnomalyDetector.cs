@@ -1,4 +1,6 @@
-namespace MbtxAssessment;
+using MbtxAssessment.Models;
+
+namespace MbtxAssessment.Services;
 
 public class AnomalyDetector
 {

@@ -1,4 +1,6 @@
-namespace MbtxAssessment.SensorReadings;
+using MbtxAssessment.Models;
+
+namespace MbtxAssessment.Services;
 
 public class TestSensorReadingGenerator(
     ILogger<TestSensorReadingGenerator> logger) : BackgroundService

@@ -1,4 +1,6 @@
-﻿namespace MbtxAssessment.Tests;
+﻿using MbtxAssessment.Services;
+
+namespace MbtxAssessment.Tests;
 
 public class AnomalyDetectorTests
 {
@@ -6,7 +8,10 @@ public class AnomalyDetectorTests
     public void AnomalyDetector_WithLessThan5Readings_ReturnsNoAnomaly()
     {
         AnomalyDetector detector = new("test-x");
-        var anomaly = detector.Analyze(10m);
+        detector.Analyze(22.1m);
+        detector.Analyze(21.9m);
+        detector.Analyze(22.3m);
+        var anomaly = detector.Analyze(87.0m);
         Assert.Null(anomaly);
     }
 
@@ -26,11 +31,11 @@ public class AnomalyDetectorTests
             detector.Analyze(value);
 
         // Spike
-        var anomaly = detector.Analyze(55.0m);
+        var anomaly = detector.Analyze(87.0m);
 
         Assert.NotNull(anomaly);
         Assert.Equal("test-x", anomaly.SensorType);
-        Assert.Equal(55.0m, anomaly.Value);
+        Assert.Equal(87.0m, anomaly.Value);
         Assert.True(anomaly.ZScore > 2.5m, $"Expected z-score > 2.5, got {anomaly.ZScore}");
     }
 }

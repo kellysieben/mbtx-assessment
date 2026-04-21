@@ -1,5 +1,6 @@
 using MbtxAssessment;
-using MbtxAssessment.SensorReadings;
+using MbtxAssessment.Data;
+using MbtxAssessment.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);

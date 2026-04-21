@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 
-namespace MbtxAssessment.SensorReadings;
+namespace MbtxAssessment.Services;
 
 public class SensorHub : Hub
 {

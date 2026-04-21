@@ -1,4 +1,4 @@
-namespace MbtxAssessment;
+namespace MbtxAssessment.Models;
 
 public record SensorReading
 {

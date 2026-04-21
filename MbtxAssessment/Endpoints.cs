@@ -1,4 +1,6 @@
-using MbtxAssessment.SensorReadings;
+using MbtxAssessment.Data;
+using MbtxAssessment.Models;
+using MbtxAssessment.Services;
 
 namespace MbtxAssessment;
 
