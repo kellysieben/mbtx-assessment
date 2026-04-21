@@ -1,9 +1,11 @@
 @MbtxAssessment_HostAddress = http://localhost:5241
 
+###
+
 GET {{MbtxAssessment_HostAddress}}/api/happy/
 Accept: application/json
 
-###
+### deprecated endpoint - removed from API
 
 POST {{MbtxAssessment_HostAddress}}/clients/register?clientId=my-client-71
 Accept: application/json
@@ -13,9 +15,18 @@ Accept: application/json
 GET {{MbtxAssessment_HostAddress}}/api/readings/latest
 Accept: application/json
 
-###
+### get all anomalies
+
+GET {{MbtxAssessment_HostAddress}}/api/anomaly
+Accept: application/json
+
+### get 7 most recent anomalies
+
+GET {{MbtxAssessment_HostAddress}}/api/anomaly?limit=7
+Accept: application/json
 
 ### takes array of sensor readings and posts to the API, which will then broadcast to connected clients via SignalR
+
 POST {{MbtxAssessment_HostAddress}}/api/readings
 Content-Type: application/json  
 

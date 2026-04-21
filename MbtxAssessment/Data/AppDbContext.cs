@@ -1,18 +1,17 @@
 using Microsoft.EntityFrameworkCore;
-using MbtxAssessment.DataStore;
 
-namespace MbtxAssessment;
+namespace MbtxAssessment.Data;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
-    public DbSet<RegisteredClientEntity> RegisteredClients => Set<RegisteredClientEntity>();
     public DbSet<SensorReadingEntity> SensorReadings => Set<SensorReadingEntity>();
+    public DbSet<AnomalyEntity> Anomalies => Set<AnomalyEntity>();
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<RegisteredClientEntity>()
-            .HasKey(c => c.ClientId);
-
         modelBuilder.Entity<SensorReadingEntity>()
             .HasKey(r => r.Id);
+        modelBuilder.Entity<AnomalyEntity>()
+            .HasKey(a => a.Id);
     }
 }

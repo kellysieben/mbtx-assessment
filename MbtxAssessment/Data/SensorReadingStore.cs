@@ -1,6 +1,7 @@
+using MbtxAssessment.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace MbtxAssessment;
+namespace MbtxAssessment.Data;
 
 public class SensorReadingStore(IDbContextFactory<AppDbContext> dbContextFactory)
 {
