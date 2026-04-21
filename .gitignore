@@ -75,7 +75,7 @@ local.settings.json
 /yarn.lock
 
 # Angular build output served as static files
-/wwwroot/
+**/wwwroot/
 
 # Environment files
 /.env

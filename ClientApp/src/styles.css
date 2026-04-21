@@ -24,14 +24,25 @@ h2 {
   margin-bottom: 0.75rem;
 }
 
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
 .status {
   display: inline-block;
   padding: 0.35rem 1rem;
   border-radius: 1rem;
   font-weight: bold;
   font-size: 0.9rem;
-  margin-bottom: 1.5rem;
   letter-spacing: 0.05em;
+}
+
+.last-update {
+  font-size: 0.9rem;
+  color: #555;
 }
 
 .status.live {
@@ -86,11 +97,79 @@ h2 {
   color: #555;
 }
 
+/* ── Sensor Cards ──────────────────────────────────────────── */
+.sensor-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.sensor-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  border-left: 6px solid #ccc;
+  transition: border-color 0.4s ease, background-color 0.4s ease;
+}
+
+.sensor-card.status-none  { border-left-color: #ccc; }
+.sensor-card.status-green {
+  border-left-color: #28a745;
+  background-color: #f0faf3;
+}
+.sensor-card.status-yellow {
+  border-left-color: #ffc107;
+  background-color: #fffdf0;
+}
+.sensor-card.status-red {
+  border-left-color: #dc3545;
+  background-color: #fff5f5;
+}
+
+.card-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #555;
+  margin-bottom: 0.35rem;
+}
+
+.card-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #222;
+  line-height: 1.1;
+  transition: color 0.3s ease;
+}
+
+.card-no-data {
+  color: #aaa;
+}
+
+.card-unit {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 0.25rem;
+}
+
+/* ── Readings Panel ────────────────────────────────────────── */
 .readings-panel {
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 6px;
   padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.anomalies-panel {
+  border-color: #f5c6cb;
+}
+
+.anomalies-panel th {
+  background: #f8d7da;
 }
 
 .empty {
@@ -117,4 +196,31 @@ th {
 
 tr:last-child td {
   border-bottom: none;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.pagination button {
+  padding: 0.25rem 0.75rem;
+  font-size: 1.1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.pagination button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pagination span {
+  font-size: 0.9rem;
+  color: #555;
 }

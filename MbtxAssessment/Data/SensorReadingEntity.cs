@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace MbtxAssessment;
+namespace MbtxAssessment.Data;
 
 public class SensorReadingEntity
 {
