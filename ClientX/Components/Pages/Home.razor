@@ -1,5 +1,127 @@
 ﻿@page "/"
+@using ClientX.Models
+@using Microsoft.AspNetCore.SignalR.Client
+@implements IAsyncDisposable
+@inject IConfiguration Configuration
 
 <PageTitle>Greenhouse Monitor X</PageTitle>
 
-<h1>Greenhouse Monitor X</h1>
+<h1 class="mb-4">Greenhouse Monitor X</h1>
+
+<div class="table-responsive">
+	<table class="table table-striped table-hover align-middle mb-0">
+		<thead>
+			<tr>
+				<th scope="col">Timestamp</th>
+				<th scope="col">Sensor</th>
+				<th scope="col">Sequence</th>
+				<th scope="col">Temperature</th>
+				<th scope="col">Humidity</th>
+				<th scope="col">CO2 (ppm)</th>
+			</tr>
+		</thead>
+		<tbody>
+			@if (readings.Count == 0)
+			{
+				<tr>
+					<td colspan="6">@emptyStateMessage</td>
+				</tr>
+			}
+			else
+			{
+				@foreach (var reading in readings)
+				{
+					<tr>
+						<td>@reading.Timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+						<td>@reading.SensorId</td>
+						<td>@reading.SequenceNumber</td>
+						<td>@reading.Temperature</td>
+						<td>@reading.Humidity</td>
+						<td>@reading.Co2Ppm</td>
+					</tr>
+				}
+			}
+		</tbody>
+	</table>
+</div>
+
+@code {
+	private readonly List<SensorReading> readings = [];
+	private HubConnection? hubConnection;
+	private string emptyStateMessage = "Waiting for sensor readings...";
+
+	protected override async Task OnInitializedAsync()
+	{
+		var hubUrl = Configuration["SignalR:SensorHubUrl"] ?? "http://localhost:5241/hubs/sensor";
+
+        Console.WriteLine($"jbf ------ CONNECT to SignalR hub at: {hubUrl}");
+
+		hubConnection = new HubConnectionBuilder()
+			.WithUrl(hubUrl)
+			.WithAutomaticReconnect()
+			.Build();
+
+		hubConnection.On<SensorReading>("sensorReadingAvailable", reading =>
+		{
+            Console.WriteLine($"jbf ------ RECEIVED sensor reading: {reading.SensorId} at {reading.Timestamp} (Seq: {reading.SequenceNumber})");
+			AddReading(reading);
+			emptyStateMessage = "Waiting for sensor readings...";
+			return InvokeAsync(StateHasChanged);
+		});
+
+		hubConnection.Closed += error =>
+		{
+            Console.WriteLine($"jbf ------ CONNECTION CLOSED: {error?.Message ?? "No error"}");
+			emptyStateMessage = error is null
+				? "Connection to the sensor hub closed."
+				: $"Connection to the sensor hub closed: {error.Message}";
+
+			return InvokeAsync(StateHasChanged);
+		};
+
+		try
+		{
+			await hubConnection.StartAsync();
+		}
+		catch (Exception ex)
+		{
+			emptyStateMessage = $"Unable to connect to the sensor hub: {ex.Message}";
+		}
+	}
+
+	private void AddReading(SensorReading reading)
+	{
+        Console.WriteLine($"jbf ------ ADD sensor reading: {reading.SensorId} at {reading.Timestamp} (Seq: {reading.SequenceNumber})");
+		if (readings.Any(existing => existing.Id == reading.Id))
+		{
+			return;
+		}
+
+		var insertIndex = readings.FindIndex(existing => ShouldInsertBefore(reading, existing));
+		if (insertIndex < 0)
+		{
+			readings.Add(reading);
+			return;
+		}
+
+		readings.Insert(insertIndex, reading);
+	}
+
+	private static bool ShouldInsertBefore(SensorReading candidate, SensorReading existing)
+	{
+		if (candidate.Timestamp != existing.Timestamp)
+		{
+			return candidate.Timestamp > existing.Timestamp;
+		}
+
+		return candidate.SequenceNumber > existing.SequenceNumber;
+	}
+
+	public async ValueTask DisposeAsync()
+	{
+		if (hubConnection is not null)
+		{
+			await hubConnection.DisposeAsync();
+		}
+	}
+}
