@@ -24,6 +24,10 @@ builder.Services.AddSingleton<AnomalyStore>();
 builder.Services.AddSingleton<SensorService>();
 builder.Services.AddHostedService<TestSensorReadingGenerator>();
 
+// Add services
+builder.Services.AddControllersWithViews(); // Required for WebAssembly hosting
+builder.Services.AddRazorPages();
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -33,7 +37,15 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseCors();
+    
+app.UseWebAssemblyDebugging(); // For development only
+app.UseBlazorFrameworkFiles();
+app.UseStaticFiles();
+
+app.UseRouting();
 
 app.MapApiEndpoints();
+
+app.MapFallbackToFile("index.html");
 
 app.Run();

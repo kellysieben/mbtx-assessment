@@ -1,5 +1,157 @@
 ﻿@page "/"
+@using ClientB.Models
+@using Microsoft.AspNetCore.SignalR.Client
+@implements IAsyncDisposable
+@inject IConfiguration Configuration
+@inject NavigationManager NavigationManager
 
-<PageTitle>Greenhouse Monitor B</PageTitle>
+<PageTitle>Greenhouse Monitor B.0</PageTitle>
 
-<h1>Greenhouse Monitor B</h1>
+<h1 class="mb-4">Greenhouse Monitor B.0</h1>
+
+<div class="table-responsive">
+	<table class="table table-striped table-hover align-middle mb-0">
+		<thead>
+			<tr>
+				<th scope="col">Timestamp</th>
+				<th scope="col">Sensor</th>
+				<th scope="col">Sequence</th>
+				<th scope="col">Temperature</th>
+				<th scope="col">Humidity</th>
+				<th scope="col">CO2 (ppm)</th>
+			</tr>
+		</thead>
+		<tbody>
+			@if (readings.Count == 0)
+			{
+				<tr>
+					<td colspan="6">@emptyStateMessage</td>
+				</tr>
+			}
+			else
+			{
+				@foreach (var reading in readings)
+				{
+					<tr>
+						<td>@reading.Timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+						<td>@reading.SensorId</td>
+						<td>@reading.SequenceNumber</td>
+						<td>@reading.Temperature</td>
+						<td>@reading.Humidity</td>
+						<td>@reading.Co2Ppm</td>
+					</tr>
+				}
+			}
+		</tbody>
+	</table>
+</div>
+
+@code {
+	private readonly List<SensorReading> readings = [];
+	private HubConnection? hubConnection;
+	private string emptyStateMessage = "Waiting for sensor readings...";
+
+	protected override async Task OnInitializedAsync()
+	{
+		var hubUrl = ResolveHubUrl();
+
+        Console.WriteLine($"jbf ------- Connecting to hub at: {hubUrl}");
+
+		hubConnection = new HubConnectionBuilder()
+			.WithUrl(hubUrl)
+			.WithAutomaticReconnect()
+			.Build();
+
+		hubConnection.On<SensorReading>("sensorReadingAvailable", reading =>
+		{
+			AddReading(reading);
+			emptyStateMessage = "Waiting for sensor readings...";
+			return InvokeAsync(StateHasChanged);
+		});
+
+		hubConnection.Reconnecting += error =>
+		{
+			emptyStateMessage = "Reconnecting to sensor hub...";
+			return InvokeAsync(StateHasChanged);
+		};
+
+		hubConnection.Reconnected += connectionId =>
+		{
+			emptyStateMessage = "Waiting for sensor readings...";
+			return InvokeAsync(StateHasChanged);
+		};
+
+		hubConnection.Closed += error =>
+		{
+			emptyStateMessage = error is null
+				? "Connection to the sensor hub closed."
+				: $"Connection to the sensor hub closed: {error.Message}";
+			return InvokeAsync(StateHasChanged);
+		};
+
+		try
+		{
+			emptyStateMessage = "Connecting to sensor hub...";
+			await hubConnection.StartAsync();
+			emptyStateMessage = "Waiting for sensor readings...";
+		}
+		catch (Exception ex)
+		{
+			emptyStateMessage = $"Unable to connect to the sensor hub: {ex.Message}";
+		}
+	}
+
+	private string ResolveHubUrl()
+	{
+        //var portFowardedUrl = "https://fuzzy-broccoli-gx4w76469vcpwx5-5241.app.github.dev/hubs/sensor";
+		var configuredUrl = "/hubs/sensor";
+
+//		if (!Uri.TryCreate(configuredUrl, UriKind.Absolute, out var hubUri))
+//		{
+//			return configuredUrl;
+//		}
+
+//		var appUri = new Uri(NavigationManager.BaseUri);
+//		if (appUri.Scheme == Uri.UriSchemeHttps && hubUri.Scheme == Uri.UriSchemeHttp && hubUri.Host == "localhost")
+//		{
+//			return "https://localhost:7105/hubs/sensor";
+//		}
+
+		return configuredUrl;
+	}
+
+	private void AddReading(SensorReading reading)
+	{
+		if (readings.Any(existing => existing.Id == reading.Id))
+		{
+			return;
+		}
+
+		var insertIndex = readings.FindIndex(existing => ShouldInsertBefore(reading, existing));
+		if (insertIndex < 0)
+		{
+			readings.Add(reading);
+			return;
+		}
+
+		readings.Insert(insertIndex, reading);
+	}
+
+	private static bool ShouldInsertBefore(SensorReading candidate, SensorReading existing)
+	{
+		if (candidate.Timestamp != existing.Timestamp)
+		{
+			return candidate.Timestamp > existing.Timestamp;
+		}
+
+		return candidate.SequenceNumber > existing.SequenceNumber;
+	}
+
+	public async ValueTask DisposeAsync()
+	{
+		if (hubConnection is not null)
+		{
+			await hubConnection.DisposeAsync();
+		}
+	}
+}
