@@ -3,6 +3,7 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @implements IAsyncDisposable
 @inject IConfiguration Configuration
+@inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
 
 <PageTitle>Greenhouse Monitor B.0</PageTitle>
@@ -46,10 +47,35 @@
 	</table>
 </div>
 
+<div class="row g-2 mt-3 align-items-center">
+	<div class="col-12 col-md-9">
+		<input
+			class="form-control"
+			type="text"
+			placeholder="Enter URL/URI to test connectivity"
+			@bind="resourceUri"
+			@bind:event="oninput" />
+	</div>
+	<div class="col-12 col-md-3">
+		<button class="btn btn-primary w-100" @onclick="GetResourceAsync" disabled="@isFetchingResource">GET</button>
+	</div>
+</div>
+
+<div class="mt-2">
+	<textarea
+		class="form-control"
+		rows="12"
+		placeholder="Raw GET response will appear here"
+		readonly>@resourceGetResult</textarea>
+</div>
+
 @code {
 	private readonly List<SensorReading> readings = [];
 	private HubConnection? hubConnection;
+	private bool isFetchingResource;
 	private string emptyStateMessage = "Waiting for sensor readings...";
+	private string resourceUri = string.Empty;
+	private string resourceGetResult = string.Empty;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -118,6 +144,57 @@
 //		}
 
 		return configuredUrl;
+	}
+
+	private async Task GetResourceAsync()
+	{
+		if (isFetchingResource)
+		{
+			return;
+		}
+
+		if (string.IsNullOrWhiteSpace(resourceUri))
+		{
+			resourceGetResult = "Enter a URL/URI before clicking GET.";
+			return;
+		}
+
+		if (!Uri.TryCreate(resourceUri.Trim(), UriKind.Absolute, out var uri))
+		{
+			resourceGetResult = "The value entered is not a valid absolute URI.";
+			return;
+		}
+
+		isFetchingResource = true;
+
+		try
+		{
+			using var request = new HttpRequestMessage(HttpMethod.Get, uri);
+			using var response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead);
+			var body = await response.Content.ReadAsStringAsync();
+
+			var responseHeaders = string.Join(
+				Environment.NewLine,
+				response.Headers.Select(header => $"{header.Key}: {string.Join(", ", header.Value)}"));
+
+			var contentHeaders = string.Join(
+				Environment.NewLine,
+				response.Content.Headers.Select(header => $"{header.Key}: {string.Join(", ", header.Value)}"));
+
+			resourceGetResult =
+				$"HTTP/{response.Version} {(int)response.StatusCode} {response.ReasonPhrase}{Environment.NewLine}" +
+				$"{responseHeaders}{Environment.NewLine}" +
+				$"{contentHeaders}{Environment.NewLine}{Environment.NewLine}" +
+				body;
+		}
+		catch (Exception ex)
+		{
+			resourceGetResult = $"GET request failed: {ex.Message}{Environment.NewLine}{ex}";
+		}
+		finally
+		{
+			isFetchingResource = false;
+		}
 	}
 
 	private void AddReading(SensorReading reading)
