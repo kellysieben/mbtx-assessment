@@ -47,26 +47,30 @@
 	</table>
 </div>
 
-<div class="row g-2 mt-3 align-items-center">
-	<div class="col-12 col-md-9">
-		<input
-			class="form-control"
-			type="text"
-			placeholder="Enter relative or absolute URL/URI"
-			@bind="resourceUri"
-			@bind:event="oninput" />
-	</div>
-	<div class="col-12 col-md-3">
-		<button class="btn btn-primary w-100" @onclick="GetResourceAsync" disabled="@isFetchingResource">GET</button>
-	</div>
-</div>
+<hr class="my-4" />
 
-<div class="mt-2">
-	<textarea
-		class="form-control"
-		rows="12"
-		placeholder="Raw GET response will appear here"
-		readonly>@resourceGetResult</textarea>
+<div hidden>
+	<div class="row g-2 mt-3 align-items-center">
+		<div class="col-12 col-md-9">
+			<input
+				class="form-control"
+				type="text"
+				placeholder="Enter relative or absolute URL/URI"
+				@bind="resourceUri"
+				@bind:event="oninput" />
+		</div>
+		<div class="col-12 col-md-3">
+			<button class="btn btn-primary w-100" @onclick="GetResourceAsync" disabled="@isFetchingResource">GET</button>
+		</div>
+	</div>
+
+	<div class="mt-2">
+		<textarea
+			class="form-control"
+			rows="12"
+			placeholder="Raw GET response will appear here"
+			readonly>@resourceGetResult</textarea>
+	</div>
 </div>
 
 @code {
@@ -129,25 +133,19 @@
 
 	private string ResolveHubUrl()
 	{
-        //var portFowardedUrl = "https://fuzzy-broccoli-gx4w76469vcpwx5-5241.app.github.dev/hubs/sensor";
-		var configuredUrl = "/hubs/sensor";
+		var hubUrl = "hubs/sensor";
 
-//		if (!Uri.TryCreate(configuredUrl, UriKind.Absolute, out var hubUri))
-//		{
-//			return configuredUrl;
-//		}
+		if (TryResolveRequestUri(hubUrl, out var resolvedUri))
+		{
+			return resolvedUri.ToString();
+		}
 
-//		var appUri = new Uri(NavigationManager.BaseUri);
-//		if (appUri.Scheme == Uri.UriSchemeHttps && hubUri.Scheme == Uri.UriSchemeHttp && hubUri.Host == "localhost")
-//		{
-//			return "https://localhost:7105/hubs/sensor";
-//		}
-
-		return configuredUrl;
+		return hubUrl;
 	}
 
 	private async Task GetResourceAsync()
 	{
+		// test w/ https://api.github.com/zen
 		if (isFetchingResource)
 		{
 			return;
@@ -169,6 +167,7 @@
 
 		try
 		{
+			Console.WriteLine($"jbf ------- GET: [ {uri} ]");
 			using var request = new HttpRequestMessage(HttpMethod.Get, uri);
 			using var response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead);
 			var body = await response.Content.ReadAsStringAsync();
@@ -202,19 +201,24 @@
 		var trimmedInput = input.Trim();
 		uri = null!;
 
+		Console.WriteLine($"jbf ------- trimmedInput: [ {trimmedInput} ]");
+
 		if (Uri.TryCreate(trimmedInput, UriKind.Absolute, out var absoluteUri))
 		{
 			uri = absoluteUri;
+			Console.WriteLine($"jbf ------- absoluteUri: [ {absoluteUri} ]");
 			return true;
 		}
 
 		if (!Uri.TryCreate(trimmedInput, UriKind.Relative, out var relativeUri))
 		{
 			uri = null!;
+			Console.WriteLine($"jbf ------- invalid relativeUri: [ {trimmedInput} ]");
 			return false;
 		}
 
 		uri = new Uri(new Uri(NavigationManager.BaseUri), relativeUri);
+		Console.WriteLine($"jbf ------- resolved relativeUri: [ {uri} ]");
 		return true;
 	}
 
