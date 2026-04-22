@@ -4,6 +4,7 @@
 @implements IAsyncDisposable
 @inject IConfiguration Configuration
 @inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
 
 <PageTitle>Greenhouse Monitor X</PageTitle>
 
@@ -51,7 +52,7 @@
 		<input
 			class="form-control"
 			type="text"
-			placeholder="Enter URL/URI to test connectivity"
+			placeholder="Enter relative or absolute URL/URI"
 			@bind="resourceUri"
 			@bind:event="oninput" />
 	</div>
@@ -179,9 +180,9 @@
 			return;
 		}
 
-		if (!Uri.TryCreate(resourceUri.Trim(), UriKind.Absolute, out var uri))
+		if (!TryResolveRequestUri(resourceUri, out var uri))
 		{
-			resourceGetResult = "The value entered is not a valid absolute URI.";
+			resourceGetResult = "The value entered is not a valid URI.";
 			return;
 		}
 
@@ -216,6 +217,27 @@
 		{
 			isFetchingResource = false;
 		}
+	}
+
+	private bool TryResolveRequestUri(string input, out Uri uri)
+	{
+		var trimmedInput = input.Trim();
+		uri = null!;
+
+		if (Uri.TryCreate(trimmedInput, UriKind.Absolute, out var absoluteUri))
+		{
+			uri = absoluteUri;
+			return true;
+		}
+
+		if (!Uri.TryCreate(trimmedInput, UriKind.Relative, out var relativeUri))
+		{
+			uri = null!;
+			return false;
+		}
+
+		uri = new Uri(new Uri(NavigationManager.BaseUri), relativeUri);
+		return true;
 	}
 
 	private void AddReading(SensorReading reading)
