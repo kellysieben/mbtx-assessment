@@ -47,14 +47,46 @@
 
 @code {
 	private readonly List<SensorReading> readings = [];
+	private readonly string instanceId = Guid.NewGuid().ToString("N")[..8];
 	private HubConnection? hubConnection;
+	private bool connectionStartAttempted;
+	private bool disposed;
 	private string emptyStateMessage = "Waiting for sensor readings...";
 
-	protected override async Task OnInitializedAsync()
+	protected override void OnInitialized()
 	{
-		var hubUrl = Configuration["SignalR:SensorHubUrl"] ?? "http://localhost:5241/hubs/sensor";
+		Log("OnInitialized");
+	}
 
-        Console.WriteLine($"jbf ------ CONNECT to SignalR hub at: {hubUrl}");
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (!firstRender)
+		{
+			return;
+		}
+
+		Log("OnAfterRenderAsync(firstRender=true) - interactive lifecycle reached");
+		await StartHubConnectionAsync();
+	}
+
+	private async Task StartHubConnectionAsync()
+	{
+		if (disposed)
+		{
+			Log("Skipping connection start because component is already disposed");
+			return;
+		}
+
+		if (connectionStartAttempted)
+		{
+			Log("Skipping connection start because it was already attempted");
+			return;
+		}
+
+		connectionStartAttempted = true;
+		var hubUrl = Configuration["SignalR:SensorHubUrl"] ?? "http://localhost:5241/hubs/sensor";
+		emptyStateMessage = "Connecting to sensor hub...";
+		Log($"Preparing HubConnection to {hubUrl}");
 
 		hubConnection = new HubConnectionBuilder()
 			.WithUrl(hubUrl)
@@ -63,37 +95,57 @@
 
 		hubConnection.On<SensorReading>("sensorReadingAvailable", reading =>
 		{
-            Console.WriteLine($"jbf ------ RECEIVED sensor reading: {reading.SensorId} at {reading.Timestamp} (Seq: {reading.SequenceNumber})");
+			Log($"Received sensor reading SensorId={reading.SensorId}, Timestamp={reading.Timestamp:O}, Sequence={reading.SequenceNumber}");
 			AddReading(reading);
 			emptyStateMessage = "Waiting for sensor readings...";
 			return InvokeAsync(StateHasChanged);
 		});
 
+		hubConnection.Reconnecting += error =>
+		{
+			Log($"Hub reconnecting. Reason={error?.Message ?? "none"}");
+			emptyStateMessage = "Reconnecting to sensor hub...";
+			return InvokeAsync(StateHasChanged);
+		};
+
+		hubConnection.Reconnected += connectionId =>
+		{
+			Log($"Hub reconnected. ConnectionId={connectionId ?? "null"}");
+			emptyStateMessage = "Waiting for sensor readings...";
+			return InvokeAsync(StateHasChanged);
+		};
+
 		hubConnection.Closed += error =>
 		{
-            Console.WriteLine($"jbf ------ CONNECTION CLOSED: {error?.Message ?? "No error"}");
+			Log($"Hub closed. State={hubConnection?.State}. Reason={error?.Message ?? "none"}");
 			emptyStateMessage = error is null
 				? "Connection to the sensor hub closed."
 				: $"Connection to the sensor hub closed: {error.Message}";
-
 			return InvokeAsync(StateHasChanged);
 		};
 
 		try
 		{
+			Log("Starting HubConnection");
 			await hubConnection.StartAsync();
+			Log($"HubConnection started successfully. State={hubConnection.State}");
+			emptyStateMessage = "Waiting for sensor readings...";
+			await InvokeAsync(StateHasChanged);
 		}
 		catch (Exception ex)
 		{
+			Log($"HubConnection start failed: {ex}");
 			emptyStateMessage = $"Unable to connect to the sensor hub: {ex.Message}";
+			await InvokeAsync(StateHasChanged);
 		}
 	}
 
 	private void AddReading(SensorReading reading)
 	{
-        Console.WriteLine($"jbf ------ ADD sensor reading: {reading.SensorId} at {reading.Timestamp} (Seq: {reading.SequenceNumber})");
+		Log($"Adding reading Id={reading.Id}, Timestamp={reading.Timestamp:O}, Sequence={reading.SequenceNumber}");
 		if (readings.Any(existing => existing.Id == reading.Id))
 		{
+			Log($"Skipping duplicate reading Id={reading.Id}");
 			return;
 		}
 
@@ -105,6 +157,11 @@
 		}
 
 		readings.Insert(insertIndex, reading);
+	}
+
+	private void Log(string message)
+	{
+		Console.WriteLine($"{DateTimeOffset.UtcNow:O} Home[{instanceId}] {message}");
 	}
 
 	private static bool ShouldInsertBefore(SensorReading candidate, SensorReading existing)
@@ -119,9 +176,20 @@
 
 	public async ValueTask DisposeAsync()
 	{
+		disposed = true;
+		Log($"DisposeAsync called. HubState={hubConnection?.State}");
+
 		if (hubConnection is not null)
 		{
+			if (hubConnection.State != HubConnectionState.Disconnected)
+			{
+				Log("Stopping HubConnection before dispose");
+				await hubConnection.StopAsync();
+			}
+
+			Log("Disposing HubConnection");
 			await hubConnection.DisposeAsync();
+			Log("HubConnection disposed");
 		}
 	}
 }
