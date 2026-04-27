@@ -37,6 +37,7 @@ Greenhouse Guard test assessment
 * navigate to --> localhost:5241
 
 ## Notes & Future Considerations
+* Could not get vitest to behave properly in dev branch.  'npm test' runs ok, but 'npm run build' produces many error.  Leaving UI test code in its branch for now.
 * Simplified the SignalR hub broadcast to "send all", removing the need for client registration and store. A more robust client handler might be needed in the future.
 * hi/lo limits on the data could be specified using the UI, and stored server-side for validation before broadcast
 * other business rules & validations could be performed server-side, such as data quality and staleness.
